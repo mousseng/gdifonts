@@ -58,6 +58,7 @@ ffi.cdef[[
     bool GetFontAvailable(const char* font);
     void EnableTextureDump(uint32_t* pManager, const char* folder);
     void DisableTextureDump(uint32_t* pManager);
+    bool AddFontFile(uint32_t* pManager, const char* path, char* familyOut, int familyOutSize);
 ]]
 
 local interface = renderer.CreateFontManager(d3d.get_device());
@@ -194,6 +195,18 @@ function exports:enable_texture_dump(path)
 end
 
 local checkedFonts = T{};
+
+-- Loads a .ttf/.otf for this process only; returns its family name (use as font_family), or nil on failure.
+function exports:add_font_file(path)
+    local buf = ffi.new('char[256]');
+    if not renderer.AddFontFile(interface, path, buf, 256) then
+        return nil;
+    end
+    local family = ffi.string(buf);
+    checkedFonts[family] = nil;
+    return family;
+end
+
 function exports:get_font_available(fontName)
     local result = checkedFonts[fontName];
     if result ~= nil then
